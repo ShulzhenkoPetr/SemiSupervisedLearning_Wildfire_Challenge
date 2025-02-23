@@ -1,0 +1,55 @@
+architecture_list:
+- - conv
+  - 3
+  - 32
+- - conv
+  - 32
+  - 64
+- - conv
+  - 64
+  - 64
+- - pool
+  - 64
+  - 128
+- - conv
+  - 128
+  - 128
+- - pool
+  - 128
+  - 256
+- - conv
+  - 256
+  - 256
+batch_size: 32
+ckpt_mode: max
+dataset_stats: unlabelled
+exp_name: unlabelled_norms_naiveNet
+k_ckpts: 3
+load_optimizer: null
+lr: 1e-3
+metric_names:
+- avg_CE
+- avg_Acc
+- tp
+- fp
+- fn
+- precision
+- recall
+- f1_score
+model_name: NaiveNet
+momentum: null
+monitor_metric: val/avg_Acc
+nbr_classes: 1
+nbr_warmup_batches: null
+num_epochs: 30
+optimizer_name: Adam
+positive_cls_thr: 0.5
+pretrained_checkpoint: null
+saving_path: checkpoints/
+sch_gamma: null
+sch_step: null
+seed: 42
+train_data_path: ./data/train/
+val_data_path: ./data/val/
+test_data_path: ./data/test/
+weight_decay: 1e-4

@@ -1,0 +1,44 @@
+exp_name: 'imagenet_norms_naiveNet'
+seed: 42
+
+# Model
+model_name: 'NaiveNet'
+architecture_list: 
+  - [conv, 3, 32]
+  # MaxPool
+  - [conv, 32, 64]
+  - [conv, 64, 64]
+  - [pool, 64, 128]
+  - [conv, 128, 128]
+  - [pool, 128, 256]
+  - [conv, 256, 256]
+nbr_classes: 1
+pretrained_checkpoint: 
+load_optimizer:
+positive_cls_thr: 0.5
+
+# Data
+dataset_stats: 'imagenet'
+train_data_path: './data/train/'
+val_data_path: './data/val/'
+
+# Training 
+batch_size: 32
+optimizer_name: 'Adam'
+lr: 1e-3
+weight_decay: 1e-4
+momentum:
+sch_step:
+sch_gamma:
+nbr_warmup_batches:
+num_epochs: 30
+
+saving_path: 'checkpoints/'
+monitor_metric: 'val/avg_Acc'
+k_ckpts: 3
+ckpt_mode: 'max'
+
+metric_names: ['avg_CE', 'avg_Acc', 'tp', 'fp', 'fn', 'precision' , 'recall', 'f1_score']
+
+
+
