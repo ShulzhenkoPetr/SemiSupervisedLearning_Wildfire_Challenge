@@ -1,5 +1,9 @@
-exp_name: 'imagenet_norms_customresnet'
+exp_name: 'SLL-custom-resnet-conf04999'
 seed: 42
+
+confidence_th: 0.4999
+path2ckpt: 'checkpoints/CustomResNet_medium_augs_rot0_nojitter_unlabelled_norms_warmup15_scheduler_epochsNone/checkpoint_epoch_28.pth'
+num_ssl_iters: 1
 
 # Model
 model_name: 'CustomResNet'
@@ -13,8 +17,6 @@ architecture_list:
   - [pool, 128, 256]
   - [conv, 256, 256]
 nbr_classes: 1
-pretrained_checkpoint: 
-load_optimizer:
 positive_cls_thr: 0.5
 
 # Data
@@ -22,17 +24,22 @@ dataset_stats: 'unlabelled'
 train_data_path: './data/train/'
 val_data_path: './data/val/'
 test_data_path: './data/test/'
+unlabelled_data_path: './data/unlabelled/'
+
+p_hor_flip: 0.5
+p_ver_flip: 0.5
+rand_rot_degree: 15
 
 # Training 
 batch_size: 32
 optimizer_name: 'Adam'
-lr: 1e-3
+lr: 1e-4
 weight_decay: 1e-4
 momentum:
-sch_step:
-sch_gamma:
-nbr_warmup_batches:
-num_epochs: 30
+sch_step: 30
+sch_gamma: 0.5
+nbr_warmup_batches: 35
+num_epochs: 10
 
 saving_path: 'checkpoints/'
 monitor_metric: 'val/avg_Acc'
@@ -40,6 +47,3 @@ k_ckpts: 3
 ckpt_mode: 'max'
 
 metric_names: ['avg_CE', 'avg_Acc', 'tp', 'fp', 'fn', 'precision' , 'recall', 'f1_score']
-
-
-

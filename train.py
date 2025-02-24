@@ -30,13 +30,13 @@ def train_model(config: SimpleNamespace) -> None:
     val_transforms = get_val_transforms(dataset_stats=config.dataset_stats)
 
     train_dataloader = get_dataloader(
-        Path(config.train_data_path), transforms=train_transforms, batch_size=config.batch_size
+        folder_path=Path(config.train_data_path), transforms=train_transforms, batch_size=config.batch_size
     )
     val_dataloader = get_dataloader(
-        Path(config.val_data_path), transforms=val_transforms, batch_size=config.batch_size, shuffle=False
+        folder_path=Path(config.val_data_path), transforms=val_transforms, batch_size=config.batch_size, shuffle=False
     )
     # test_dataloader = get_dataloader(
-    #     config.test_data_path, transforms=val_transforms, batch_size=config.batch_size, shuffle=False
+    #     folder_path=config.test_data_path, transforms=val_transforms, batch_size=config.batch_size, shuffle=False
     # )
 
     # Setup model
@@ -167,13 +167,14 @@ def evaluate(
         dataloader: torch.utils.data.DataLoader,
         config: SimpleNamespace,
         logger: Any, epoch: int, device: torch.device,
-        phase_type: str = 'val') -> Dict:
+        phase_type: str = 'val',
+        is_from_logits: bool = True) -> Dict:
     
     model.eval()
 
     metrics2meters_dict = {
-        name: (get_metric_fn(name), AverageMeter(name=f'{phase_type}/{name}', logger=logger))
-        for name in config.metric_names if get_metric_fn(name) is not None
+        name: (get_metric_fn(name, is_from_logits), AverageMeter(name=f'{phase_type}/{name}', logger=logger))
+        for name in config.metric_names if get_metric_fn(name, is_from_logits) is not None
     }
 
     with torch.no_grad():

@@ -1,14 +1,13 @@
 import os
 import yaml
 from pathlib import Path
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Callable
 from types import SimpleNamespace
 from functools import partial
 import numpy as np
 import torch
 from torch import nn
-
-from models.models import NaiveNet, CustomResNet
+from omegaconf import OmegaConf
 
 
 def load_config(config_path: str) -> SimpleNamespace:
@@ -44,7 +43,7 @@ def f1_score_fn(precision, recall , eps=1e-8):
     return 2 * precision * recall / (precision + recall + eps)
 
 
-def acc_fn(preds, targets):
+def acc_fn(preds, targets, **kwargs):
     return torch.sum(preds == targets) / preds.shape[0]
 
 def acc_fn_from_logits_binary(preds, targets, th=0.5) -> float:
@@ -52,7 +51,7 @@ def acc_fn_from_logits_binary(preds, targets, th=0.5) -> float:
     return acc_fn(preds >= th, targets)
 
 
-def compute_metric(pred_labels, targets, metric: str):
+def compute_metric(pred_labels, targets, metric: str, **kwargs):
     if metric == 'tp':
         return torch.sum(pred_labels == targets)
     elif metric == 'fp': 
@@ -66,21 +65,25 @@ def compute_metric_from_logits(preds, targets, metric: str, th=0.5):
     pred_labels = torch.sigmoid(preds) >= th 
     return compute_metric(pred_labels, targets, metric)
 
-def get_metric_fn(metric_name):
+def get_metric_fn(metric_name: str, is_from_logits: bool = True) -> Callable:
+    loss_fn = nn.BCEWithLogitsLoss(reduction='mean') if is_from_logits else None
+    acc_fn_selected = acc_fn_from_logits_binary if is_from_logits else acc_fn
+    compute_fn = compute_metric_from_logits if is_from_logits else compute_metric
+
     if 'CE' in metric_name:
-        return nn.BCEWithLogitsLoss(reduction='mean')
-    elif 'Acc' in metric_name:
-        return acc_fn_from_logits_binary
-    elif 'tp' in metric_name:
-        return partial(compute_metric_from_logits, metric='tp')
-    elif 'fp' in metric_name:
-        return partial(compute_metric_from_logits, metric='fp')
-    elif 'fn' in metric_name:
-        return partial(compute_metric_from_logits, metric='fn')
-    elif 'precision' in metric_name or 'recall' in metric_name or 'f1' in metric_name: # skip to calculate globally
-        return None
-    else:
-        raise NotImplementedError(f'{metric_name}')
+        return loss_fn
+    if 'Acc' in metric_name:
+        return acc_fn_selected
+    if 'tp' in metric_name:
+        return partial(compute_fn, metric='tp')
+    if 'fp' in metric_name:
+        return partial(compute_fn, metric='fp')
+    if 'fn' in metric_name:
+        return partial(compute_fn, metric='fn')
+    if 'precision' in metric_name or 'recall' in metric_name or 'f1' in metric_name: # skip to calculate globally
+        return None 
+    
+    raise NotImplementedError(f'{metric_name}')
 
 
 class AverageMeter(object):
@@ -150,20 +153,8 @@ class ModelCheckpoint:
             torch.save(d, self.output_path / f'checkpoint_epoch_{d["epoch"]}.pth')
         
         if self.config:
+            if OmegaConf.is_config(self.config):
+                self.config = OmegaConf.is_config(self.config)
             config_dict = vars(self.config)
             with open(self.output_path / 'config.yaml', 'w') as f:
                 yaml.dump(config_dict, f, default_flow_style=False)
-
-
-def load_checkpoint(path2ckpt: Path, config: SimpleNamespace):
-    checkpoint_dict = torch.load(path2ckpt)
-    if config.model_name == 'CustomResNet':
-        model = CustomResNet(config)
-    elif config.model_name == 'NaiveNet':
-        model = NaiveNet()
-    else:
-        raise NotImplementedError(f'This model {config.model.name} is not implemented')
-    
-    model.load_state_dict(checkpoint_dict['model_state_dict'])
-
-    return model

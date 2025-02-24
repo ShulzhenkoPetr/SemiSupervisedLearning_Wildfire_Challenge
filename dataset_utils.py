@@ -1,4 +1,4 @@
-from typing import Tuple, Union
+from typing import Tuple, Union, Callable, Dict, List
 import os
 from pathlib import Path
 from types import SimpleNamespace
@@ -38,22 +38,12 @@ class LabelledDataset(Dataset):
             image = get_PIL_image(self.no_fire_file_paths[index])
             label = 0
         else:
-            index = index - len(self.no_fire_file_paths)
-            image = get_PIL_image(self.fire_file_paths[index])
+            image = get_PIL_image(self.fire_file_paths[index - len(self.no_fire_file_paths)])
             label = 1
 
         if self.transforms and image is not None:
-            try:
-                return self.transforms(image), label
-            except: 
-                print(type(image))
-                print(np.array(image).shape)
-                if index < len(self.no_fire_file_paths):
-                    name = self.no_fire_file_paths[index]
-                else:
-                    index = index - len(self.no_fire_file_paths)
-                    name = self.fire_file_paths[index]
-                print('ERROR: ', name)
+            return self.transforms(image), label
+                
         return image, label
     
 
@@ -69,28 +59,80 @@ class UnlabelledDataset(Dataset):
     def __len__(self,) -> int:
         return len(self.file_paths)
     
+    def __getitem__(self, index) -> Tuple[Union[torch.Tensor, np.ndarray], Path]:
+        image = get_PIL_image(self.file_paths[index])
+        if self.transforms and image is not None:
+            return self.transforms(image), Path(self.file_paths[index])
+        return image, Path(self.file_paths[index])
+    
+
+class PseudoLabelDataset(Dataset):
+    '''Creates a dataset with pseudo labels based on path2label dict'''
+    def __init__(self, path2label: Dict, transforms: transforms = None):
+        super().__init__()
+
+        self.path2label = path2label
+        self.paths = list(path2label.keys())
+        self.transforms = transforms
+
+    def __len__(self,) -> int:
+        return len(self.paths)
+    
     def __getitem__(self, index) -> Tuple[Union[torch.Tensor, np.ndarray], int]:
-        image = get_PIL_image(self.no_fire_file_paths[index])
-        if self.transforms and image:
-            return self.transforms(image)
-        return image
+        path = self.paths[index]
+        label = int(self.path2label[path])
+
+        image = get_PIL_image(path)
+        if self.transforms and image is not None:
+            return self.transforms(image), label
+        return image, label
+    
+
+class MergedDataset(Dataset):
+
+    def __init__(self, dataset_1, dataset_2):
+        super().__init__()
+
+        self.dataset_1 = dataset_1
+        self.dataset_2 = dataset_2
+
+    def __len__(self,) -> int:
+        return len(self.dataset_1) + len(self.dataset_2)
+    
+    def __getitem__(self, index):
+        if index < len(self.dataset_1):
+            return self.dataset_1[index]
+        else:
+            return self.dataset_2[index - len(self.dataset_1)]
+
+
+def unlbl_collate_fn(batch):
+    images, paths = zip(*batch)
+    images = torch.stack(images, dim=0)
+    return images, list(paths)
 
 
 def get_dataloader(
-        folder_path: Path, 
+        datasets: List = None,
+        folder_path: Path = None, 
         transforms: transforms = None, 
         dataset_type: str = 'labelled',
+        collate_fn: Callable = None, 
         batch_size: int = 32,
         shuffle: bool = True) -> DataLoader:
 
-    if dataset_type == 'labelled':
-        dataset = LabelledDataset(folder_path=folder_path, transforms=transforms)
-    elif dataset_type == 'unlabelled':
-        dataset = UnlabelledDataset(folder_path=folder_path, transforms=transforms)
-    else:
-        raise NotImplementedError('This dataset type is not implemented. Check string correctness')
+    if folder_path:
+        if dataset_type == 'labelled':
+            dataset = LabelledDataset(folder_path=folder_path, transforms=transforms)
+        elif dataset_type == 'unlabelled':
+            dataset = UnlabelledDataset(folder_path=folder_path, transforms=transforms)
+        else:
+            raise NotImplementedError('This dataset type is not implemented. Check string correctness')
+    elif datasets is not None:
+        assert len(datasets) == 2, 'Currently MergedDataset is implemented for two datasets'
+        dataset = MergedDataset(*datasets)
     
-    return DataLoader(dataset=dataset, batch_size=batch_size, shuffle=shuffle)
+    return DataLoader(dataset=dataset, collate_fn=collate_fn, batch_size=batch_size, shuffle=shuffle)
 
 
 def get_train_transforms(config: SimpleNamespace, dataset_stats: str = 'unlabelled') -> transforms:
