@@ -151,7 +151,7 @@ def ssl_training(config: SimpleNamespace) -> None:
 
     model = load_checkpoint(config.path2ckpt, config)
 
-    for i in tqdm(range(config.num_ssl_iters), desc=f'SSL iters {config.num_ssl_iters}'):
+    for i in tqdm(range(1, config.num_ssl_iters + 1), desc=f'SSL iters {config.num_ssl_iters}'):
 
         model = ssl_step(pretrained_model=model, config=config, ssl_iter=i)
 
