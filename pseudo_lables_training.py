@@ -112,7 +112,6 @@ def ssl_step(pretrained_model: nn.Module, config: SimpleNamespace, ssl_iter: int
 
     logger = wandb.init(
         project="wildfire",
-        # entity="petr-shuzlhenko",
         name=f'{config.exp_name}_ssl_iter{ssl_iter}'     
     )
     val_metrics_dict = evaluate(pretrained_model, 

@@ -1,0 +1,43 @@
+exp_name: 'Pretrained_${pretrained_resnet}_unfr${unfreeze_layers_list}_lr${lr}_medium_augs_rot${rand_rot_degree}_nojitter_${dataset_stats}_norms_warmup${nbr_warmup_batches}_scheduler_epochs${sch_step}'
+seed: 42
+
+# Model
+model_name: 'PretrainedResNet'
+pretrained_resnet: 'resnet18'
+freeze_layers: True
+unfreeze_layers_list: ['layer3', 'layer4', 'fc']
+nbr_classes: 1
+pretrained_checkpoint: 
+load_optimizer:
+positive_cls_thr: 0.5
+
+# Data
+dataset_stats: 'imagenet'
+train_data_path: './data/train/'
+val_data_path: './data/val/'
+test_data_path: './data/test/'
+
+p_hor_flip: 0.5
+p_ver_flip: 0.5
+rand_rot_degree: 15
+
+# Training 
+batch_size: 32
+optimizer_name: 'Adam'
+lr: 1e-4
+weight_decay: 1e-4
+momentum:
+sch_step: 20
+sch_gamma: 0.5
+nbr_warmup_batches: 45
+num_epochs: 30
+
+saving_path: 'checkpoints/'
+monitor_metric: 'val/avg_Acc'
+k_ckpts: 3
+ckpt_mode: 'max'
+
+metric_names: ['avg_CE', 'avg_Acc', 'tp', 'fp', 'fn', 'precision' , 'recall', 'f1_score']
+
+
+

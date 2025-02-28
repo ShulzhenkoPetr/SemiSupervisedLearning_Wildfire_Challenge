@@ -1,0 +1,43 @@
+exp_name: 'SLL-pretrained-resnet-layer34fc-conf0499999'
+seed: 42
+
+confidence_th: 0.499999
+path2ckpt: 'checkpoints/Pretrained_resnet18_unfr_layer3_layer4_fc_lr0.0001_medium_augs_rot15_nojitter_imagenet_norms_warmup45_scheduler_epochs20/checkpoint_epoch_16.pth'
+num_ssl_iters: 5
+
+# Model
+model_name: 'PretrainedResNet'
+pretrained_resnet: 'resnet18'
+freeze_layers: True
+unfreeze_layers_list: ['layer3', 'layer4', 'fc']
+nbr_classes: 1
+positive_cls_thr: 0.5
+
+# Data
+dataset_stats: 'imagenet'
+train_data_path: './data/train/'
+val_data_path: './data/val/'
+test_data_path: './data/test/'
+unlabelled_data_path: './data/unlabelled/'
+
+p_hor_flip: 0.5
+p_ver_flip: 0.5
+rand_rot_degree: 15
+
+# Training 
+batch_size: 32
+optimizer_name: 'Adam'
+lr: 1e-4
+weight_decay: 1e-4
+momentum:
+sch_step: 30
+sch_gamma: 0.5
+nbr_warmup_batches: 35
+num_epochs: 10
+
+saving_path: 'checkpoints/'
+monitor_metric: 'val/avg_Acc'
+k_ckpts: 1
+ckpt_mode: 'max'
+
+metric_names: ['avg_CE', 'avg_Acc', 'tp', 'fp', 'fn', 'precision' , 'recall', 'f1_score']

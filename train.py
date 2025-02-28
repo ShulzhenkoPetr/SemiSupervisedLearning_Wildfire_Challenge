@@ -103,7 +103,6 @@ def train_model(config: SimpleNamespace) -> None:
 
     logger = wandb.init(
         project="wildfire",
-        # entity="petr-shuzlhenko",
         name=config.exp_name        
     )
 

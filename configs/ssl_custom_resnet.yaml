@@ -3,7 +3,7 @@ seed: 42
 
 confidence_th: 0.4999
 path2ckpt: 'checkpoints/CustomResNet_medium_augs_rot0_nojitter_unlabelled_norms_warmup15_scheduler_epochsNone/checkpoint_epoch_28.pth'
-num_ssl_iters: 1
+num_ssl_iters: 5
 
 # Model
 model_name: 'CustomResNet'

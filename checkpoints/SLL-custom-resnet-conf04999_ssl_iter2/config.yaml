@@ -1,0 +1,60 @@
+architecture_list:
+- - conv
+  - 3
+  - 32
+- - conv
+  - 32
+  - 64
+- - conv
+  - 64
+  - 64
+- - pool
+  - 64
+  - 128
+- - conv
+  - 128
+  - 128
+- - pool
+  - 128
+  - 256
+- - conv
+  - 256
+  - 256
+batch_size: 32
+ckpt_mode: max
+confidence_th: 0.4999
+dataset_stats: unlabelled
+exp_name: SLL-custom-resnet-conf04999
+k_ckpts: 3
+lr: 1e-4
+metric_names:
+- avg_CE
+- avg_Acc
+- tp
+- fp
+- fn
+- precision
+- recall
+- f1_score
+model_name: CustomResNet
+momentum: null
+monitor_metric: val/avg_Acc
+nbr_classes: 1
+nbr_warmup_batches: 35
+num_epochs: 10
+num_ssl_iters: 5
+optimizer_name: Adam
+p_hor_flip: 0.5
+p_ver_flip: 0.5
+path2ckpt: checkpoints/CustomResNet_medium_augs_rot0_nojitter_unlabelled_norms_warmup15_scheduler_epochsNone/checkpoint_epoch_28.pth
+positive_cls_thr: 0.5
+rand_rot_degree: 15
+saving_path: checkpoints/
+sch_gamma: 0.5
+sch_step: 30
+seed: 42
+test_data_path: ./data/test/
+train_data_path: ./data/train/
+unlabelled_data_path: ./data/unlabelled/
+val_data_path: ./data/val/
+weight_decay: 1e-4
